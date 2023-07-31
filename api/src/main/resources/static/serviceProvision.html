@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Management</title>
+    <style>
+         body {
+    font-family: 'Helvetica', sans-serif;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.service-section {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.service-section h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+button {
+    background-color: #87ceeb; /* "sky blue" color */
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background-color 0.3s ease; /* Added transition for smooth effect */
+}
+
+button:hover {
+    background-color: #1e90ff; /* Darker blue color on hover */
+}
+
+.message {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.message.green {
+    color: green;
+}
+
+.message.red {
+    color: red;
+}
+    </style>
+</head>
+<body>
+    <h1>Service Management</h1>
+
+    <!-- Provision Service -->
+    <div class="service-card" id="provisionServiceForm">
+        <h2>Provision Service:</h2>
+        <label for="serviceName">Service Name:</label>
+        <input type="text" id="serviceName" required>
+        <label for="connectionId">Connection ID:</label>
+        <input type="text" id="connectionId" required><br><br>
+        <button type="button" onclick="provisionService()">Provision Service</button>
+        <div class="message" id="provisionMessage"></div>
+    </div>
+
+    <!-- Test QoS -->
+    <div class="service-card" id="testQoSForm">
+        <h2>Test QoS:</h2>
+        <label for="testConnectionId">Connection ID:</label>
+        <input type="text" id="testConnectionId" required><br><br>
+        <button type="button" onclick="testQoS()">Test QoS</button>
+        <div class="message" id="testQoSMessage"></div>
+    </div>
+
+    <!-- Disable Service -->
+    <div class="service-card" id="disableServiceForm">
+        <h2>Disable Service:</h2>
+        <label for="disableConnectionId">Connection ID:</label>
+        <input type="text" id="disableConnectionId" required><br><br>
+        <button type="button" onclick="disableService()">Disable Service</button>
+        <div class="message" id="disableMessage"></div>
+    </div>
+
+    <!-- Hold Service -->
+    <div class="service-card" id="holdServiceForm">
+        <h2>Hold Service:</h2>
+        <label for="holdConnectionId">Connection ID:</label>
+        <input type="text" id="holdConnectionId" required><br><br>
+        <button type="button" onclick="holdService()">Hold Service</button>
+        <div class="message" id="holdMessage"></div>
+    </div>
+
+    <!-- Resume Service -->
+    <div class="service-card" id="resumeServiceForm">
+        <h2>Resume Service:</h2>
+        <label for="resumeConnectionId">Connection ID:</label>
+        <input type="text" id="resumeConnectionId" required><br><br>
+        <button type="button" onclick="resumeService()">Resume Service</button>
+        <div class="message" id="resumeMessage"></div>
+    </div>
+
+    <script>
+        // Function to handle response messages
+        function showResponseMessage(formId, message, isSuccess) {
+            const form = document.getElementById(formId);
+            const messageElement = form.querySelector('.message');
+            messageElement.innerText = message;
+            messageElement.style.color = isSuccess ? 'green' : 'red';
+        }
+
+        // Function to provision a new service
+        function provisionService() {
+            const serviceName = document.getElementById('serviceName').value;
+            const connectionId = document.getElementById('connectionId').value;
+
+            if (!serviceName || !connectionId) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            const serviceData = {
+                serviceName: serviceName,
+                connectionId: connectionId
+            };
+
+            fetch('/api/service/provision', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(serviceData)
+            })
+            .then(response => {
+                if (response.status === 201) {
+                    showResponseMessage('provisionServiceForm', 'Service provisioned successfully.', true);
+                    document.getElementById('serviceName').value = '';
+                    document.getElementById('connectionId').value = '';
+                } else {
+                    showResponseMessage('provisionServiceForm', 'Error provisioning service.', false);
+                }
+            })
+            .catch(error => console.error('Error provisioning service:', error));
+        }
+
+        // Function to test the quality of service (QoS) for a service
+        function testQoS() {
+            const connectionId = document.getElementById('testConnectionId').value;
+
+            if (!connectionId) {
+                alert('Please fill in the connection ID.');
+                return;
+            }
+
+            const serviceData = {
+                connectionId: connectionId
+            };
+
+            fetch('/api/service/test-qos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(serviceData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    showResponseMessage('testQoSForm', 'QoS test successful.', true);
+                } else {
+                    showResponseMessage('testQoSForm', 'Error testing QoS. Service is not active.', false);
+                }
+            })
+            .catch(error => console.error('Error testing QoS:', error));
+        }
+
+        // Function to disable a service
+        function disableService() {
+            const connectionId = document.getElementById('disableConnectionId').value;
+
+            if (!connectionId) {
+                alert('Please fill in the connection ID.');
+                return;
+            }
+
+            fetch(`/api/service/disable/${connectionId}`, {
+                method: 'PUT'
+            })
+            .then(response => {
+                if (response.ok) {
+                    showResponseMessage('disableServiceForm', 'Service disabled successfully.', true);
+                } else {
+                    showResponseMessage('disableServiceForm', 'Error disabling service. Service not found.', false);
+                }
+            })
+            .catch(error => console.error('Error disabling service:', error));
+        }
+
+        // Function to put a service on hold
+        function holdService() {
+            const connectionId = document.getElementById('holdConnectionId').value;
+
+            if (!connectionId) {
+                alert('Please fill in the connection ID.');
+                return;
+            }
+
+            fetch(`/api/service/hold/${connectionId}`, {
+                method: 'PUT'
+            })
+            .then(response => {
+                if (response.ok) {
+                    showResponseMessage('holdServiceForm', 'Service put on hold successfully.', true);
+                } else {
+                    showResponseMessage('holdServiceForm', 'Error putting service on hold. Service not found.', false);
+                }
+            })
+            .catch(error => console.error('Error putting service on hold:', error));
+        }
+
+        // Function to resume a service
+        function resumeService() {
+            const connectionId = document.getElementById('resumeConnectionId').value;
+
+            if (!connectionId) {
+                alert('Please fill in the connection ID.');
+                return;
+            }
+
+            fetch(`/api/service/resume/${connectionId}`, {
+                method: 'PUT'
+            })
+            .then(response => {
+                if (response.ok) {
+                    showResponseMessage('resumeServiceForm', 'Service resumed successfully.', true);
+                } else {
+                    showResponseMessage('resumeServiceForm', 'Error resuming service. Service not found.', false);
+                }
+            })
+            .catch(error => console.error('Error resuming service:', error));
+        }
+    </script>
+</body>
+</html>

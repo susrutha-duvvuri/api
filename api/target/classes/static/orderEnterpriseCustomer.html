@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Order Management</title>
+	<style>
+	body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-container {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+.form-container label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-container input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+button {
+    background-color: #87ceeb; /* "sky blue" color */
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background-color 0.3s ease; /* Added transition for smooth effect */
+}
+
+button:hover {
+    background-color: #1e90ff; /* Darker blue color on hover */
+}
+
+#orderList {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th,
+table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ccc;
+}
+
+table th {
+    background-color: #f2f2f2;
+}
+			</style>
+</head>
+
+<body>
+	<h1>Order Enterprise Management</h1>
+
+	<!-- Create Order Form -->
+	<div class="form-container">
+		<label for="customerId">Customer ID:</label>
+		<input type="text" id="customerId" required>
+		<label for="orderId">Order ID:</label>
+		<input type="text" id="orderId" required>
+		<label for="productName">Product Name:</label>
+		<input type="text" id="productName" required>
+		<label for="amount">Amount:</label>
+		<input type="text" id="amount" required>
+		<button type="button" onclick="createOrder()">Create Order</button>
+	</div>
+
+	<!-- Update Order Form -->
+	<div class="form-container">
+		<label for="updateCustomerId">Customer ID:</label>
+		<input type="text" id="updateCustomerId" required>
+		<label for="updateOrderId">Order ID:</label>
+		<input type="text" id="updateOrderId" required>
+		<label for="updateProductName">Product Name:</label>
+		<input type="text" id="updateProductName" required>
+		<label for="updateAmount">Amount:</label>
+		<input type="text" id="updateAmount" required>
+		<button type="button" onclick="updateOrder()">Update Order</button>
+	</div>
+
+	<!-- Get Orders By Customer ID Form -->
+	<div class="form-container">
+		<label for="getCustomerId">Customer ID:</label>
+		<input type="text" id="getCustomerId" required>
+		<button type="button" onclick="getOrdersByCustomerId()">Get Orders</button>
+	</div>
+
+	<!-- Get Order By ID Form -->
+	<div class="form-container">
+		<label for="getOrderId">Order ID:</label>
+		<input type="text" id="getOrderId" required>
+		<button type="button" onclick="getOrderById()">Get Order</button>
+	</div>
+
+
+
+	<!-- Order List Table -->
+	<div id="orderList">
+		<!-- Orders will be displayed here -->
+	</div>
+
+	<script>
+		// Create Order Function
+		function createOrder() {
+			const orderId = document.getElementById('orderId').value;
+			const customerId = document.getElementById('customerId').value;
+			const productName = document.getElementById('productName').value;
+			const amount = document.getElementById('amount').value;
+
+			const newOrder = {
+				orderId: orderId,
+				customerId: customerId,
+				productName: productName,
+				amount: parseFloat(amount)
+			};
+
+			fetch(`/api/enterprise/customers/${customerId}/orders`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(newOrder)
+			})
+				.then(response => response.json())
+				.then(order => {
+					alert('Order created successfully:', order);
+					getAllOrders(); // Refresh the order list
+				})
+				.catch(error => console.error('Error creating order:', error));
+		}
+
+		// Update Order Function
+		function updateOrder() {
+			const customerId = document.getElementById('updateCustomerId').value;
+			const orderId = document.getElementById('updateOrderId').value;
+			const productName = document.getElementById('updateProductName').value;
+			const amount = document.getElementById('updateAmount').value;
+
+			const updatedOrder = {
+				productName: productName,
+				amount: parseFloat(amount)
+			};
+
+			fetch(`/api/enterprise/customers/${customerId}/orders/${orderId}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(updatedOrder)
+			})
+				.then(response => {
+					if (response.ok) {
+						alert('Order updated successfully');
+						getAllOrders(); // Refresh the order list
+					} else {
+						alert('Error updating order.');
+					}
+				})
+				.catch(error => console.error('Error updating order:', error));
+		}
+
+		// Get Orders By Customer ID Function
+		function getOrdersByCustomerId() {
+			const customerId = document.getElementById('getCustomerId').value;
+			fetch(`/api/enterprise/customers/${customerId}/orders`)
+				.then(response => response.json())
+				.then(orders => {
+					const orderListElement = document.getElementById('orderList');
+					if (orders.length === 0) {
+						orderListElement.innerHTML = '<p>No orders found for the specified customer.</p>';
+					} else {
+						let tableHtml = '<table><tr><th>Order ID</th><th>Product Name</th><th>Amount</th></tr>';
+						orders.forEach(order => {
+							tableHtml += `<tr>
+                                <td>${order.orderId}</td>
+                                <td>${order.productName}</td>
+                                <td>${order.amount}</td>
+                            </tr>`;
+						});
+						tableHtml += '</table>';
+						orderListElement.innerHTML = tableHtml;
+					}
+				})
+				.catch(error => console.error('Error fetching orders:', error));
+		}
+
+		// Get Order By ID Function
+		function getOrderById() {
+			const customerId = document.getElementById('getCustomerId').value;
+			const orderId = document.getElementById('getOrderId').value;
+
+			fetch(`/api/enterprise/customers/${customerId}/orders/${orderId}`)
+				.then(response => {
+					if (response.ok) {
+						return response.json();
+					} else {
+						throw new Error('Order not found.');
+					}
+				})
+				.then(order => {
+					const orderListElement = document.getElementById('orderList');
+					const tableHtml = `
+                        <table>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Product Name</th>
+                                <th>Amount</th>
+                            </tr>
+                            <tr>
+                                <td>${order.orderId}</td>
+                                <td>${order.productName}</td>
+                                <td>${order.amount}</td>
+                            </tr>
+                        </table>
+                    `;
+					orderListElement.innerHTML = tableHtml;
+				})
+				.catch(error => {
+					const orderListElement = document.getElementById('orderList');
+					orderListElement.innerHTML = '<p>Order not found.</p>';
+					console.error('Error fetching order:', error);
+				});
+		}
+
+
+
+		// Function to fetch all orders for a customer
+		function getAllOrders() {
+			const customerId = document.getElementById('customerId').value;
+			fetch(`/api/enterprise/customers/${customerId}/orders`)
+				.then(response => response.json())
+				.then(orders => {
+					// Update order list
+					const orderListElement = document.getElementById('orderList');
+					if (orders.length === 0) {
+						orderListElement.innerHTML = '<p>No orders found for the specified customer.</p>';
+					} else {
+						let tableHtml = '<table><tr><th>Order ID</th><th>Product Name</th><th>Amount</th></tr>';
+						orders.forEach(order => {
+							tableHtml += `<tr>
+                                <td>${order.orderId}</td>
+                                <td>${order.productName}</td>
+                                <td>${order.amount}</td>
+                            </tr>`;
+						});
+						tableHtml += '</table>';
+						orderListElement.innerHTML = tableHtml;
+					}
+				})
+				.catch(error => console.error('Error fetching orders:', error));
+		}
+	</script>
+</body>
+
+</html>

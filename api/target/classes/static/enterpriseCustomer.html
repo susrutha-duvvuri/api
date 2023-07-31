@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Enterprise Customer Management</title>
+
+	<style>
+		body {
+    font-family: 'Comic Sans MS', sans-serif;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.action-block {
+    margin-bottom: 20px;
+}
+
+.action-block h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.form-container {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.form-container label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-container input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+button {
+    background-color: #87ceeb; /* "sky blue" color */
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background-color 0.3s ease; /* Added transition for smooth effect */
+}
+
+button:hover {
+    background-color: #1e90ff; /* Darker blue color on hover */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ccc;
+}
+
+table th {
+    background-color: #f2f2f2;
+}
+	</style>
+
+</head>
+
+<body>
+	<div class="container">
+		<h1>Enterprise Customer Management</h1>
+
+		<!-- Add Customer Form -->
+		<div class="order-card">
+			<h2>Add Customer:</h2>
+			<div class="form-container">
+				<label for="customerId">Customer ID:</label>
+				<input type="text" id="customerId" required>
+				<label for="companyName">Company Name:</label>
+				<input type="text" id="companyName" required><br><br>
+				<button type="button" onclick="addCustomer()">Add Customer</button>
+			</div>
+		</div>
+
+		<!-- Update Customer Form -->
+		<div class="order-card">
+			<h2>Update Customer:</h2>
+			<div class="form-container">
+				<label for="updateCustomerId">Customer ID:</label>
+				<input type="text" id="updateCustomerId" required>
+				<label for="updateCompanyName">Company Name:</label>
+				<input type="text" id="updateCompanyName" required><br><br>
+				<button type="button" onclick="updateCustomer()">Update Customer</button>
+			</div>
+		</div>
+
+		<!-- Get Customer By ID Form -->
+		<div class="order-card">
+			<h2>Get Customer By ID:</h2>
+			<div class="form-container">
+				<label for="getCustomerId">Customer ID:</label>
+				<input type="text" id="getCustomerId" required><br><br>
+				<button type="button" onclick="getCustomerById()">Get Customer</button>
+			</div>
+		</div>
+
+		<!-- Get All Customers Button -->
+		<div class="order-card">
+			<h2>Get All Customers:</h2>
+			<button type="button" onclick="getAllCustomers()">Get All Customers</button>
+		</div>
+		<div class="order-card">
+			<h2>Customer List:</h2>
+			<table id="customerList">
+				<thead>
+					<tr>
+						<th scope="col">Customer ID</th>
+						<th scope="col">Company Name</th>
+					</tr>
+				</thead>
+				<tbody>
+
+
+			</table>
+		</div>
+	</div>
+
+	<script>
+
+		// Place your JavaScript code here
+		function addCustomer() {
+			const customerId = document.getElementById('customerId').value;
+			const companyName = document.getElementById('companyName').value;
+
+			const newCustomer = {
+				customerId: customerId,
+				companyName: companyName
+			};
+
+			// Use fetch API to call the addCustomer endpoint on the server-side
+			// Replace the URL with the actual API endpoint
+			fetch(`/api/enterprise/customers`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(newCustomer)
+			})
+				.then(response => {
+					if (response.ok) {
+						alert('Customer added successfully');
+						clearAddForm();
+					} else {
+						alert('Error adding customer.');
+					}
+				})
+				.catch(error => console.error('Error adding customer:', error));
+		}
+
+		function updateCustomer() {
+			const customerId = document.getElementById('updateCustomerId').value;
+			const companyName = document.getElementById('updateCompanyName').value;
+
+			const updatedCustomer = {
+				companyName: companyName
+			};
+
+			// Use fetch API to call the updateCustomer endpoint on the server-side
+			// Replace the URL with the actual API endpoint
+			fetch(`/api/enterprise/customers/${customerId}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(updatedCustomer)
+			})
+				.then(response => {
+					if (response.ok) {
+						alert('Customer updated successfully');
+						clearUpdateForm();
+					} else {
+						alert('Error updating customer.');
+					}
+				})
+				.catch(error => console.error('Error updating customer:', error));
+		}
+
+		function getCustomerById() {
+			const customerId = document.getElementById('getCustomerId').value;
+
+			// Use fetch API to call the getCustomerById endpoint on the server-side
+			// Replace the URL with the actual API endpoint
+			fetch(`/api/enterprise/customers/${customerId}`)
+				.then(response => {
+					if (response.ok) {
+						return response.json();
+					} else {
+						throw new Error('Customer not found.');
+					}
+				})
+				.then(customer => {
+					const customerListElement = document.querySelector('#customerList tbody');
+					customerListElement.innerHTML = ''; // Clear existing table rows
+
+					const row = document.createElement('tr');
+					row.innerHTML = `
+			        <td>${customer.customerId}</td>
+			        <td>${customer.companyName}</td>
+			      `;
+					customerListElement.appendChild(row);
+				})
+				.catch(error => {
+					const customerListElement = document.querySelector('#customerList tbody');
+					customerListElement.innerHTML = `<tr><td colspan="2">${error.message}</td></tr>`;
+					console.error('Error fetching customer:', error);
+				});
+		}
+
+		function getAllCustomers() {
+			// Use fetch API to call the getAllCustomers endpoint on the server-side
+			// Replace the URL with the actual API endpoint
+			fetch(`/api/enterprise/customers`)
+				.then(response => response.json())
+				.then(customers => {
+					const customerListElement = document.querySelector('#customerList tbody');
+					customerListElement.innerHTML = ''; // Clear existing table rows
+
+					customers.forEach(customer => {
+						const row = document.createElement('tr');
+						row.innerHTML = `
+          <td>${customer.customerId}</td>
+          <td>${customer.companyName}</td>
+        `;
+						customerListElement.appendChild(row);
+					});
+				})
+				.catch(error => console.error('Error fetching customers:', error));
+		}
+
+		function clearAddForm() {
+			document.getElementById('customerId').value = '';
+			document.getElementById('companyName').value = '';
+		}
+
+		function clearUpdateForm() {
+			document.getElementById('updateCustomerId').value = '';
+			document.getElementById('updateCompanyName').value = '';
+		}
+
+
+	</script>
+</body>
+
+</html>
